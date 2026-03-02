@@ -1,0 +1,413 @@
+/* extracted from index.html */
+:root {
+  --cream:        #FDF8F2;
+  --warm-white:   #FAF5EE;
+  --green:        #2A4A1E;
+  --green-light:  #3D6B2C;
+  --amber:        #D4863A;
+  --amber-light:  #E9A55A;
+  --brown:        #7A6048;
+  --text:         #1C1814;
+  --text-muted:   #8B7B6B;
+  --border:       #DDD0C0;
+  --shadow:       rgba(44, 24, 8, 0.08);
+  --card-bg:      #FFFFFF;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 15% 0%,   rgba(212,134,58,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%,  rgba(42,74,30,0.06)  0%, transparent 55%);
+}
+
+/* ── Header ── */
+.app-header {
+  padding: 1.75rem 2rem 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.app-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  color: var(--green);
+  letter-spacing: -0.02em;
+}
+.app-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
+/* ── Week nav ── */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1.1rem 2rem;
+}
+.nav-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brown);
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+.nav-btn:hover { background: var(--green); border-color: var(--green); color: #fff; }
+.week-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--green);
+  min-width: 220px;
+  text-align: center;
+}
+
+/* ── Config notice ── */
+.config-notice {
+  display: none;
+  background: #FFF3CD;
+  border: 1px solid #FFEAA7;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0 2rem 0.5rem;
+  font-size: 0.85rem;
+  color: #856404;
+}
+.config-notice.show { display: block; }
+
+/* ── Calendar grid ── */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.9rem;
+  padding: 0 2rem 2.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.day-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 6px var(--shadow);
+  aspect-ratio: 3/4;
+  display: flex;
+  flex-direction: column;
+}
+.day-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px var(--shadow);
+  border-color: var(--amber);
+}
+.day-card.today { border-color: var(--green); border-width: 2px; }
+
+.day-header {
+  padding: 0.55rem 0.7rem 0.35rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--warm-white);
+}
+.day-name {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.day-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  color: var(--green);
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+.day-card.today .day-number { color: var(--amber); }
+
+.day-photo-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.day-photo-area img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.day-card:hover .day-photo-area img { transform: scale(1.04); }
+
+.day-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: var(--border);
+  transition: color 0.2s;
+}
+.day-card:hover .day-empty { color: var(--amber-light); }
+.day-empty svg { width: 26px; height: 26px; }
+.day-empty span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ── Generic modal framework ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(28,24,20,0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  position: relative;
+  transform: translateY(14px);
+  transition: transform 0.22s;
+}
+.modal-overlay.active .modal { transform: translateY(0); }
+.modal h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  color: var(--green);
+  margin-bottom: 0.4rem;
+}
+.modal p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin-bottom: 1.1rem;
+}
+.modal-close {
+  position: absolute;
+  top: 0.9rem; right: 1rem;
+  background: none; border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.2rem;
+}
+.modal-close:hover { color: var(--text); }
+
+/* ── Buttons ── */
+.btn {
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+  flex: 1;
+}
+.btn-primary   { background: var(--green); color: #fff; }
+.btn-primary:hover  { background: var(--green-light); }
+.btn-secondary { background: var(--warm-white); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { border-color: var(--brown); }
+.btn-danger    { background: #B03020; color: #fff; }
+.btn-danger:hover   { background: #C0392B; }
+.modal-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; }
+
+.btn-icon {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.2rem 0.8rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--warm-white);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.btn-icon:hover { border-color: var(--amber); color: var(--amber); background: rgba(212,134,58,0.05); }
+.btn-icon svg { width: 30px; height: 30px; }
+
+/* ── Camera modal ── */
+#camera-modal .modal { max-width: 500px; }
+#camera-preview {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+/* ── Import modal ── */
+.date-detected {
+  background: var(--warm-white);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: var(--green);
+  text-align: center;
+}
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+input[type="date"] {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--card-bg);
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+}
+input[type="date"]:focus { border-color: var(--green); }
+
+/* ── Replace modal ── */
+.existing-thumb {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 200px;
+  margin-bottom: 1rem;
+}
+
+/* ── Lightbox ── */
+#lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.94);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s;
+}
+#lightbox.active { opacity: 1; pointer-events: all; }
+#lightbox img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  transform: scale(0.96);
+  transition: transform 0.28s;
+}
+#lightbox.active img { transform: scale(1); }
+#lightbox-close {
+  position: fixed;
+  top: 1.25rem; right: 1.25rem;
+  background: rgba(255,255,255,0.12);
+  border: none; color: #fff;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+#lightbox-close:hover { background: rgba(255,255,255,0.28); }
+#lightbox-caption {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 0; right: 0;
+  text-align: center;
+  color: rgba(255,255,255,0.55);
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* ── Spinner overlay ── */
+.spinner-overlay {
+  position: fixed; inset: 0;
+  background: rgba(253,248,242,0.78);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+.spinner-overlay.active { opacity: 1; pointer-events: all; }
+.spinner {
+  width: 38px; height: 38px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(90px);
+  background: var(--green);
+  color: #fff;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 300;
+  transition: transform 0.28s;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show  { transform: translateX(-50%) translateY(0); }
+.toast.error { background: #B03020; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .app-header { padding: 1.1rem 0.9rem 0.75rem; }
+  .app-subtitle { display: none; }
+  .calendar { gap: 0.45rem; padding: 0 0.7rem 2rem; }
+  .day-header { padding: 0.35rem 0.4rem 0.25rem; }
+  .day-name   { font-size: 0.52rem; }
+  .day-number { font-size: 1.05rem; }
+  .week-nav   { padding: 0.65rem 0.9rem; gap: 0.75rem; }
+  .week-label { font-size: 0.85rem; min-width: 0; }
+  .config-notice { margin: 0 0.9rem 0.5rem; }
+}

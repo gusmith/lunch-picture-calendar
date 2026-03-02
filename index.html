@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Lunch Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+
+  <app-header></app-header>
+
+  <!-- Config notice -->
+  <div class="config-notice" id="config-notice">
+    ⚠️ Please set your <strong>API_BASE</strong> URL in the <code>main.js</code> file before deploying.
+  </div>
+
+  <week-nav></week-nav>
+
+  <main>
+    <calendar-grid></calendar-grid>
+  </main>
+
+  <!-- all overlay elements injected by components below -->
+  <app-modals></app-modals>
+
+  <!-- (modals moved into a custom element) -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>

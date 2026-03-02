@@ -1,0 +1,9 @@
+# Wrangler local state (local R2 + D1 emulation data)
+.wrangler/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
