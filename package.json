@@ -1,0 +1,15 @@
+{
+  "name": "lunch-calendar",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"worker,front\" --prefix-colors \"green,blue\" \"npm run dev:worker\" \"npm run dev:front\"",
+    "dev:worker": "wrangler dev",
+    "dev:front": "npx serve . --listen 3000 --no-clipboard",
+    "setup:db": "wrangler d1 execute DB --file=schema.sql",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wrangler": "^4.69.0"
+  }
+}
