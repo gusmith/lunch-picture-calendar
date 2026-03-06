@@ -18,7 +18,7 @@
 // ── CORS headers ──────────────────────────────────────────────────────────────
 // Replace the wildcard with your exact Cloudflare Pages URL once deployed,
 // e.g. "https://lunch-calendar.pages.dev"
-const ALLOWED_ORIGIN = 'https://lunch-calendar-worker.gwil1248.workers.dev/';
+const ALLOWED_ORIGIN = 'https://lunch-picture-calendar.pages.dev/';
 
 function corsHeaders(extra = {}) {
   return {
