@@ -76,7 +76,9 @@ export async function compress(file, maxW = 2800, q = 0.94) {
 export function photoUrl(date) { return `${API_BASE}/api/photo/${date}`; }
 
 export async function apiFetchWeek(weekStart) {
-  const res = await fetch(`${API_BASE}/api/week?start=${fmtISO(weekStart)}`);
+  const res = await fetch(`${API_BASE}/api/week?start=${fmtISO(weekStart)}`, {
+    credentials: 'include',
+  });
   if (!res.ok) throw new Error('week fetch failed');
   const arr = await res.json();
   const map = {};
@@ -89,6 +91,7 @@ export async function apiFetchWeek(weekStart) {
 export async function apiUpload(date, dataUrl, sha, force = false) {
   const res = await fetch(`${API_BASE}/api/photo`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       date, sha,
