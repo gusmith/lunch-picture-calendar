@@ -18,26 +18,33 @@
 // ── CORS headers ──────────────────────────────────────────────────────────────
 // Replace the wildcard with your exact Cloudflare Pages URL once deployed,
 // e.g. "https://lunch-calendar.pages.dev"
-const ALLOWED_ORIGIN = 'https://lunch-picture-calendar.pages.dev/';
+const ALLOWED_ORIGIN = 'https://lunch-picture-calendar.pages.dev';
 
-function corsHeaders(extra = {}) {
+function corsHeaders(request, extra = {}) {
+  let allowOrigin = ALLOWED_ORIGIN;
+  if (request) {
+    const origin = request.headers.get('Origin');
+    if (origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'))) {
+      allowOrigin = origin;
+    }
+  }
   return {
-    'Access-Control-Allow-Origin':  ALLOWED_ORIGIN,
+    'Access-Control-Allow-Origin':  allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     ...extra,
   };
 }
 
-function json(data, status = 200) {
+function json(data, request, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: corsHeaders({ 'Content-Type': 'application/json' }),
+    headers: corsHeaders(request, { 'Content-Type': 'application/json' }),
   });
 }
 
-function err(msg, status = 400) {
-  return json({ error: msg }, status);
+function err(msg, request, status = 400) {
+  return json({ error: msg }, request, status);
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -56,7 +63,7 @@ export default {
       // ── GET /api/week?start=YYYY-MM-DD ───────────────────────────────────
       if (method === 'GET' && path === '/api/week') {
         const start = url.searchParams.get('start');
-        if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return err('Invalid start date');
+        if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return err('Invalid start date', request);
 
         // Build Mon–Fri date strings
         const dates = [];
@@ -82,7 +89,7 @@ export default {
           uploadedAt: map[date]?.uploaded_at ?? null,
         }));
 
-        return json(result);
+        return json(result, request);
       }
 
       // ── GET /api/photo/:date ─────────────────────────────────────────────
@@ -92,7 +99,7 @@ export default {
         if (!obj) return new Response('Not found', { status: 404, headers: corsHeaders() });
 
         return new Response(obj.body, {
-          headers: corsHeaders({
+          headers: corsHeaders(request, {
             'Content-Type':  obj.httpMetadata?.contentType ?? 'image/jpeg',
             'Cache-Control': 'private, max-age=86400',
           }),
@@ -103,13 +110,13 @@ export default {
       if (method === 'POST' && path === '/api/photo') {
         let body;
         try { body = await request.json(); }
-        catch { return err('Invalid JSON'); }
+        catch { return err('Invalid JSON', request); }
 
         const { date, sha, imageData, contentType = 'image/jpeg', force = false } = body;
 
-        if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Invalid date');
-        if (!sha)       return err('Missing sha');
-        if (!imageData) return err('Missing imageData');
+        if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('Invalid date', request);
+        if (!sha)       return err('Missing sha', request);
+        if (!imageData) return err('Missing imageData', request);
 
         // ── Duplicate SHA check ──
         const dupRow = await env.DB
@@ -119,7 +126,7 @@ export default {
 
         if (dupRow) {
           // Same photo already saved somewhere
-          return json({ duplicate: true, existingDate: dupRow.date }, 409);
+          return json({ duplicate: true, existingDate: dupRow.date }, request, 409);
         }
 
         // ── Existing photo for this date (replace flow) ──
@@ -130,7 +137,7 @@ export default {
 
         if (existingRow && !force) {
           // Client should have shown the replace dialog — this is a safety check
-          return json({ conflict: true, date }, 409);
+          return json({ conflict: true, date }, request, 409);
         }
 
         // ── Decode base64 → binary ──
@@ -139,7 +146,7 @@ export default {
           const clean = imageData.replace(/^data:image\/\w+;base64,/, '');
           binary = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
         } catch {
-          return err('Invalid image data');
+          return err('Invalid image data', request);
         }
 
         // ── Store in R2 ──
@@ -153,7 +160,7 @@ export default {
           .bind(date, sha, new Date().toISOString())
           .run();
 
-        return json({ success: true, date });
+        return json({ success: true, date }, request);
       }
 
       // ── DELETE /api/photo/:date ──────────────────────────────────────────
@@ -161,14 +168,14 @@ export default {
         const date = path.split('/').pop();
         await env.PHOTOS_BUCKET.delete(`photos/${date}`);
         await env.DB.prepare('DELETE FROM photos WHERE date = ?').bind(date).run();
-        return json({ success: true });
+        return json({ success: true }, request);
       }
 
-      return new Response('Not found', { status: 404, headers: corsHeaders() });
+      return new Response('Not found', { status: 404, headers: corsHeaders(request) });
 
     } catch (e) {
       console.error('Worker error:', e);
-      return json({ error: 'Internal server error' }, 500);
+      return json({ error: 'Internal server error' }, request, 500);
     }
   },
 };
