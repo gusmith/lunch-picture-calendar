@@ -24,7 +24,11 @@ function corsHeaders(request, extra = {}) {
   let allowOrigin = ALLOWED_ORIGIN;
   if (request) {
     const origin = request.headers.get('Origin');
-    if (origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'))) {
+    if (origin && (
+      origin.startsWith('http://localhost') || 
+      origin.startsWith('http://127.0.0.1') ||
+      origin.includes('gwil1248-parents.cloudflareaccess.com')
+    )) {
       allowOrigin = origin;
     }
   }
