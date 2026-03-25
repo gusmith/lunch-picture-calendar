@@ -1,3 +1,6 @@
+pages_build_output_dir = "./dist"
+name = "luncg-picture-calendar"
+
 [[r2_buckets]]
 binding = "PHOTOS_BUCKET"
 
