@@ -6,7 +6,7 @@
     "dev:worker": "wrangler pages dev --local build",
     "dev:front": "npx serve . --listen 3000 --no-clipboard",
     "setup:db": "wrangler d1 execute DB --file=schema.sql",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler pages deploy",
     "wrangler:login": "wrangler login"
   },
   "devDependencies": {
