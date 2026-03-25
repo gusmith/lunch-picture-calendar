@@ -26,8 +26,7 @@ function corsHeaders(request, extra = {}) {
     const origin = request.headers.get('Origin');
     if (origin && (
       origin.startsWith('http://localhost') || 
-      origin.startsWith('http://127.0.0.1') ||
-      origin.includes('gwil1248-parents.cloudflareaccess.com')
+      origin.startsWith('http://127.0.0.1')
     )) {
       allowOrigin = origin;
     }
@@ -35,7 +34,7 @@ function corsHeaders(request, extra = {}) {
   return {
     'Access-Control-Allow-Origin':  allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, CF-Authorization',
     'Access-Control-Allow-Credentials': 'true',
     ...extra,
   };
@@ -52,12 +51,77 @@ function err(msg, request, status = 400) {
   return json({ error: msg }, request, status);
 }
 
+// ── Zero Trust JWT Validation ─────────────────────────────────────────────────
+/**
+ * Validates Cloudflare Access JWT from CF-Authorization header
+ * Verifies audience claim matches ZERO_TRUST_AUDIENCE
+ */
+function validateZeroTrustJWT(request, env) {
+  // Check if Zero Trust validation is enabled
+  if (env.ZERO_TRUST_ENABLED !== 'true') {
+    return { valid: true }; // Validation disabled
+  }
+
+  const jwtToken = request.headers.get('CF-Authorization');
+  
+  if (!jwtToken) {
+    return { valid: false, error: 'Missing CF-Authorization token' };
+  }
+
+  // Basic JWT structure validation: 3 parts separated by dots
+  const parts = jwtToken.split('.');
+  if (parts.length !== 3) {
+    return { valid: false, error: 'Invalid JWT format' };
+  }
+
+  // Validate each part is not empty
+  if (parts.some(part => !part)) {
+    return { valid: false, error: 'Malformed JWT parts' };
+  }
+
+  // Attempt to parse the payload (part[1]) to verify it's valid base64 JSON
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Verify audience matches your Access application
+    if (payload.aud !== env.ZERO_TRUST_AUDIENCE) {
+      return { valid: false, error: 'Invalid token audience' };
+    }
+    
+    // Check token expiration if present
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      if (now > payload.exp) {
+        return { valid: false, error: 'Token expired' };
+      }
+    }
+    
+    // Optionally verify email domain if configured
+    if (env.EMAIL_DOMAIN && payload.email) {
+      const emailDomain = payload.email.split('@')[1];
+      if (emailDomain !== env.EMAIL_DOMAIN) {
+        return { valid: false, error: 'Unauthorized email domain' };
+      }
+    }
+
+    return { valid: true, payload };
+  } catch (e) {
+    return { valid: false, error: 'Invalid JWT payload' };
+  }
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
     // Preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders() });
+    }
+
+    // ── Zero Trust JWT Validation ──
+    const jwtValidation = validateZeroTrustJWT(request, env);
+    if (!jwtValidation.valid) {
+      return json({ error: jwtValidation.error }, request, 401);
     }
 
     const url    = new URL(request.url);
@@ -182,5 +246,5 @@ export default {
       console.error('Worker error:', e);
       return json({ error: 'Internal server error' }, request, 500);
     }
-  },
-};
+  }
+}

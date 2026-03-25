@@ -2,14 +2,12 @@ name               = "lunch-calendar-worker"
 main               = "worker.js"
 compatibility_date = "2024-09-23"
 
-# ── R2 bucket ────────────────────────────────────────────────────────────────
-# No bucket_name needed — Wrangler 4 auto-provisions it on first deploy.
+# ── Environment Variables ────────────────────────────────────────────────────
+vars = { ZERO_TRUST_ENABLED = "true", EMAIL_DOMAIN = "", ZERO_TRUST_AUDIENCE = "ae8bfba0b9f0b087d46f8fd3cd2ad683963d2b2e06f9e3aeb42207b3893b99f8" }
+
 [[r2_buckets]]
 binding = "PHOTOS_BUCKET"
 
-# ── D1 database ──────────────────────────────────────────────────────────────
-# No database_id needed — Wrangler 4 auto-provisions it on first deploy
-# and writes the ID back to this file automatically.
 [[d1_databases]]
 binding       = "DB"
 database_name = "lunch-calendar"
