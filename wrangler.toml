@@ -3,6 +3,7 @@ name = "luncg-picture-calendar"
 
 [[r2_buckets]]
 binding = "PHOTOS_BUCKET"
+bucket_name = "lunch-calendar-worker-photos-bucket"
 
 [[d1_databases]]
 binding       = "DB"
