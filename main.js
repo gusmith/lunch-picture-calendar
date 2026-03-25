@@ -7,15 +7,6 @@ import './components/app-modals.js';
 // the rest of the script originally in index.html, minus <script> tags
 import Exifr from 'https://cdn.jsdelivr.net/npm/exifr/dist/lite.esm.js';
 
-/* ────────────────────────────────────────────────────────────
-   In production, Cloudflare Pages substitutes %%API_BASE%%.
-   Locally, the placeholder is never substituted, so we detect
-   it and fall back to the local wrangler dev port automatically.
-   ──────────────────────────────────────────────────────────── */
-const _RAW = '%%API_BASE%%';
-export const API_BASE = _RAW.includes('%%') ? 'http://localhost:8787' : _RAW;
-/* ────────────────────────────────────────────────────────────── */
-
 // ── State ──
 export let currentWeekStart = getMonday(new Date());
 export let weekPhotos = {};   // { 'YYYY-MM-DD': { sha, uploadedAt } }
@@ -73,12 +64,10 @@ export async function compress(file, maxW = 2800, q = 0.94) {
 }
 
 // ── API calls ──
-export function photoUrl(date) { return `${API_BASE}/api/photo/${date}`; }
+export function photoUrl(date) { return `/api/photo/${date}`; }
 
 export async function apiFetchWeek(weekStart) {
-  const res = await fetch(`${API_BASE}/api/week?start=${fmtISO(weekStart)}`, {
-    credentials: 'include',
-  });
+  const res = await fetch(`/api/week?start=${fmtISO(weekStart)}`);
   if (!res.ok) throw new Error('week fetch failed');
   const arr = await res.json();
   const map = {};
@@ -89,9 +78,8 @@ export async function apiFetchWeek(weekStart) {
 }
 
 export async function apiUpload(date, dataUrl, sha, force = false) {
-  const res = await fetch(`${API_BASE}/api/photo`, {
+  const res = await fetch(`/api/photo`, {
     method: 'POST',
-    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       date, sha,
@@ -163,10 +151,7 @@ export async function loadWeek() {
     weekPhotos = await apiFetchWeek(currentWeekStart);
     renderCalendar();
   } catch {
-    showToast('Could not load photos — check API_BASE config.', true);
-    if (API_BASE.includes('YOUR_WORKER')) {
-      document.getElementById('config-notice').classList.add('show');
-    }
+    showToast('Could not load photos.', true);
     weekPhotos = {};
     renderCalendar();
   } finally {
@@ -363,8 +348,4 @@ document.getElementById('add-modal-close').onclick = () => closeModal('add-modal
 document.getElementById('prev-week').onclick = () => { currentWeekStart = addDays(currentWeekStart, -7); loadWeek(); };
 document.getElementById('next-week').onclick = () => { currentWeekStart = addDays(currentWeekStart,  7); loadWeek(); };
 
-// ── Init ──
-if (!API_BASE.includes('localhost') && API_BASE.includes('YOUR_WORKER')) {
-  document.getElementById('config-notice').classList.add('show');
-}
 loadWeek();
