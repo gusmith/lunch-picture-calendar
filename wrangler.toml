@@ -2,9 +2,10 @@ pages_build_output_dir = "./dist"
 name = "luncg-picture-calendar"
 
 [[r2_buckets]]
-binding = "PHOTOS_BUCKET"
+binding     = "PHOTOS_BUCKET"
 bucket_name = "lunch-calendar-worker-photos-bucket"
 
 [[d1_databases]]
 binding       = "DB"
+database_id   = "f8298ac0-4148-49aa-9d86-4878a63e7596"
 database_name = "lunch-calendar"
